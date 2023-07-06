@@ -1,0 +1,32 @@
+// Import the LST image collection
+var modis = ee.ImageCollection("MODIS/006/MOD11A1")
+  .filterDate("1982-01-01", "2022-12-31")
+  .select('LST_Day_1km');
+
+// Define the region of interest (Ghana)
+var region = ee.Geometry.Rectangle(-3.5, 4.5, 1.5, 11.5);
+
+// Convert Kelvin to Celsius
+var modcel = modis.map(function(img) {
+  return img
+    .multiply(0.02)
+    .subtract(273.15)
+    .copyProperties(img, ['system:time_start']);
+});
+
+// Image visualization
+var mean = modcel.mean().clip(region);
+
+// Set computation time limit to 5 minutes (300 seconds)
+ee.data.setDeadline(300);
+
+// Generate a download URL for the Land Surface Temperature (LST) image
+var downloadUrl = mean.getDownloadURL({
+  name: 'LST_Ghana',
+  scale: 1000,
+  region: region,
+  format: 'GeoTIFF'
+});
+
+// Print the download URL
+print('Download the LST image:', downloadUrl);
